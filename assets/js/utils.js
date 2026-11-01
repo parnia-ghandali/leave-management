@@ -95,13 +95,25 @@
     return { from: start, to: addDays(start, 6) };
   }
 
-  /** ISO -> '1405/08/10' با ارقام فارسی */
-  function formatJalali(iso) {
-    if (!iso) return '—';
-    var p = iso.split('-').map(Number);
-    var j = g2j(p[0], p[1], p[2]);
-    return toFa(j[0] + '/' + pad(j[1]) + '/' + pad(j[2]));
+ /** تاریخ شمسی یا میلادی را به قالب شمسی نمایش می‌دهد */
+function formatJalali(iso) {
+  if (!iso) return '—';
+
+  var value = toEn(String(iso)).trim();
+
+  // اگر تاریخ از قبل شمسی باشد
+  if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value)) {
+    var p = value.split('/').map(Number);
+    return toFa(p[0] + '/' + pad(p[1]) + '/' + pad(p[2]));
   }
+
+  // اگر تاریخ میلادی باشد
+  var p = value.split('-').map(Number);
+  if (p.length !== 3 || p.some(isNaN)) return '—';
+
+  var j = g2j(p[0], p[1], p[2]);
+  return toFa(j[0] + '/' + pad(j[1]) + '/' + pad(j[2]));
+}
 
   /** ISO -> 'یکشنبه ۱۰ آبان ۱۴۰۵' */
   function formatJalaliLong(iso) {
