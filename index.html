@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>سامانه مدیریت مرخصی | شرکت فرضی آریانا</title>
+  <meta name="description" content="داشبورد مدیریتی بررسی و تأیید درخواست‌های مرخصی کارکنان (نسخه نمایشی Front-end)">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<!-- ============ صفحه ورود ============ -->
+<section id="login-view" class="login-view" hidden>
+  <div class="login-card">
+    <div class="brand brand--center">
+      <svg class="brand__logo" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#0f2a4a"/>
+        <path d="M14 33 24 13l10 20" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18.5 26h11" stroke="#60a5fa" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <h1 class="brand__name">شرکت آریانا</h1>
+      <p class="brand__sub">سامانه مدیریت مرخصی کارکنان</p>
+    </div>
+
+    <form id="login-form" novalidate>
+      <div class="field">
+        <label for="username">نام کاربری</label>
+        <input id="username" name="username" type="text" autocomplete="username" placeholder="نام کاربری را وارد کنید" dir="ltr" class="ltr-input">
+      </div>
+      <div class="field">
+        <label for="password">رمز عبور</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="رمز عبور را وارد کنید" dir="ltr" class="ltr-input">
+      </div>
+      <p id="login-error" class="form-error" role="alert" hidden></p>
+      <button type="submit" class="btn btn--primary btn--block">ورود به سامانه</button>
+    </form>
+
+    <div class="demo-note">
+      <strong>نسخه نمایشی:</strong> نام کاربری <code>admin</code> و رمز عبور <code>admin123</code>.
+      ورود فقط شبیه‌سازی شده و امنیت واقعی نیازمند Backend است.
+    </div>
+  </div>
+</section>
+
+<!-- ============ پوسته اصلی برنامه ============ -->
+<div id="app-view" class="app" hidden>
+  <div id="backdrop" class="backdrop" hidden></div>
+
+  <aside id="sidebar" class="sidebar" aria-label="منوی اصلی">
+    <div class="brand brand--side">
+      <svg class="brand__logo brand__logo--sm" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="12" fill="#2563eb"/>
+        <path d="M14 33 24 13l10 20" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M18.5 26h11" stroke="#bfdbfe" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="brand__name brand__name--side">شرکت آریانا</div>
+        <div class="brand__sub brand__sub--side">مدیریت مرخصی</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <button class="nav__item is-active" data-view="dashboard">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>داشبورد</span>
+      </button>
+      <button class="nav__item" data-view="requests">
+        <svg viewBox="0 0 24 24"><path d="M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M8 12h8M8 16h5"/></svg>
+        <span>درخواست‌های مرخصی</span>
+        <b id="nav-pending-badge" class="nav__badge" hidden>0</b>
+      </button>
+      <button class="nav__item" data-view="weekly">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        <span>مرخصی‌های این هفته</span>
+      </button>
+      <button class="nav__item" data-view="reports">
+        <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <span>گزارش‌ها</span>
+      </button>
+    </nav>
+
+    <div class="sidebar__footer">
+      <button id="logout-btn" class="nav__item nav__item--danger">
+        <svg viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M16 8l4 4-4 4M20 12H9"/></svg>
+        <span>خروج از حساب کاربری</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button id="menu-btn" class="icon-btn menu-btn" aria-label="باز کردن منو">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <h2 id="page-title" class="topbar__title">داشبورد</h2>
+      <div class="topbar__meta">
+        <span id="today-label" class="chip chip--muted"></span>
+        <span class="user-pill"><span class="user-pill__avatar" id="user-avatar">م</span><span id="user-name">مدیر سیستم</span></span>
+      </div>
+    </header>
+
+    <main class="content">
+
+      <!-- داشبورد -->
+      <section id="view-dashboard" class="view">
+        <div class="stats" id="stats"></div>
+        <div class="panel">
+          <div class="panel__head">
+            <h3>درخواست‌های در انتظار بررسی</h3>
+            <button class="btn btn--ghost btn--sm" data-goto="requests">مشاهده همه</button>
+          </div>
+          <div id="dashboard-pending"></div>
+        </div>
+      </section>
+
+      <!-- درخواست‌ها -->
+      <section id="view-requests" class="view" hidden>
+        <div class="panel">
+          <div class="filters" id="filters">
+            <div class="field field--search">
+              <label for="f-search">جستجو</label>
+              <input id="f-search" type="search" placeholder="نام کارمند، کد ملی یا شناسه درخواست">
+            </div>
+            <div class="field">
+              <label for="f-type">نوع مرخصی</label>
+              <select id="f-type">
+                <option value="">همه</option>
+                <option value="daily">روزانه</option>
+                <option value="hourly">ساعتی</option>
+                <option value="sick">استعلاجی</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-status">وضعیت</label>
+              <select id="f-status">
+                <option value="">همه</option>
+                <option value="pending">در انتظار بررسی</option>
+                <option value="approved">تأییدشده</option>
+                <option value="rejected">ردشده</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-from">ثبت از تاریخ</label>
+              <input id="f-from" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۰۱" class="ltr-input" dir="ltr">
+            </div>
+            <div class="field">
+              <label for="f-to">ثبت تا تاریخ</label>
+              <input id="f-to" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۸/۳۰" class="ltr-input" dir="ltr">
+            </div>
+            <div class="field field--btn">
+              <button id="f-reset" class="btn btn--ghost">پاک‌سازی فیلترها</button>
+            </div>
+          </div>
+          <p id="result-count" class="result-count"></p>
+          <div class="table-wrap">
+            <table class="table" id="requests-table">
+              <thead>
+                <tr>
+                  <th>شناسه درخواست</th>
+                  <th>نام و نام خانوادگی</th>
+                  <th>کد ملی</th>
+                  <th>نوع مرخصی</th>
+                  <th>تاریخ شروع</th>
+                  <th>تاریخ پایان</th>
+                  <th>تاریخ ثبت</th>
+                  <th>وضعیت</th>
+                  <th>عملیات</th>
+                </tr>
+              </thead>
+              <tbody id="requests-body"></tbody>
+            </table>
+          </div>
+          <div id="pagination" class="pagination"></div>
+        </div>
+      </section>
+
+      <!-- مرخصی‌های هفته -->
+      <section id="view-weekly" class="view" hidden>
+        <div class="panel">
+          <div class="panel__head">
+            <div>
+              <h3>مرخصی‌های این هفته</h3>
+              <p id="week-range" class="muted"></p>
+            </div>
+          </div>
+          <div class="filters filters--inline">
+            <div class="field">
+              <label for="w-from">از تاریخ</label>
+              <input id="w-from" type="text" inputmode="numeric" class="ltr-input" dir="ltr">
+            </div>
+            <div class="field">
+              <label for="w-to">تا تاریخ</label>
+              <input id="w-to" type="text" inputmode="numeric" class="ltr-input" dir="ltr">
+            </div>
+            <div class="field">
+              <label for="w-type">نوع مرخصی</label>
+              <select id="w-type">
+                <option value="">همه</option>
+                <option value="daily">روزانه</option>
+                <option value="hourly">ساعتی</option>
+                <option value="sick">استعلاجی</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>وضعیت</label>
+              <div class="static-field"><span class="badge badge--approved">تأییدشده</span></div>
+            </div>
+            <div class="field field--btn">
+              <button id="w-apply" class="btn btn--primary">اعمال</button>
+              <button id="w-reset" class="btn btn--ghost">هفته جاری</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="table" id="weekly-table">
+              <thead>
+                <tr>
+                  <th>نام و نام خانوادگی</th>
+                  <th>نوع مرخصی</th>
+                  <th>تاریخ شروع</th>
+                  <th>تاریخ پایان</th>
+                </tr>
+              </thead>
+              <tbody id="weekly-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- گزارش‌ها -->
+      <section id="view-reports" class="view" hidden>
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel__head"><h3>توزیع بر اساس نوع مرخصی</h3></div>
+            <div id="report-types"></div>
+          </div>
+          <div class="panel">
+            <div class="panel__head"><h3>توزیع بر اساس وضعیت</h3></div>
+            <div id="report-status"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel__head">
+            <h3>جدول تفکیکی نوع مرخصی و وضعیت</h3>
+            <button id="export-csv" class="btn btn--primary btn--sm">دریافت خروجی CSV</button>
+          </div>
+          <div class="table-wrap">
+            <table class="table table--compact" id="report-matrix"></table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ============ مودال‌ها ============ -->
+<div id="modal-root" class="modal-root" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" id="modal">
+    <div class="modal__head">
+      <h3 id="modal-title"></h3>
+      <button id="modal-close" class="icon-btn" aria-label="بستن">
+        <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div id="modal-body" class="modal__body"></div>
+    <div id="modal-foot" class="modal__foot"></div>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/utils.js"></script>
+<script src="assets/js/mock-data.js"></script>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
