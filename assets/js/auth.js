@@ -1,47 +1,65 @@
-/**
- * احراز هویت نمایشی
- * ----------------------------------------------------------
- * هشدار: این ورود فقط یک شبیه‌سازی ظاهری است و هیچ امنیتی ندارد
- * (هر کسی می‌تواند sessionStorage را دستکاری کند). در نسخه واقعی،
- * احراز هویت باید توسط Backend انجام شود (مثلاً توکن JWT یا کوکی HttpOnly).
- */
 (function () {
   'use strict';
 
   var KEY = CONFIG.STORAGE_KEYS.session;
 
   window.Auth = {
-    login: function (username, password) {
-      return new Promise(function (resolve, reject) {
-        setTimeout(function () {
-          var c = CONFIG.DEMO_CREDENTIALS;
-          if (username === c.username && password === c.password) {
-            var user = { username: c.username, displayName: c.displayName, loggedInAt: Date.now() };
-            try { sessionStorage.setItem(KEY, JSON.stringify(user)); } catch (e) { /* ignore */ }
-            Auth._user = user;
-            resolve(user);
-          } else {
-            reject(new Error('نام کاربری یا رمز عبور اشتباه است.'));
-          }
-        }, 350);
-      });
+    login: async function (username, password) {
+      var response;
+
+      try {
+        response = await fetch(CONFIG.API_BASE_URL + '/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ username: username, password: password })
+        });
+      } catch (error) {
+        throw new Error('ارتباط با سرور برقرار نشد.');
+      }
+
+      var data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'ورود ناموفق بود.');
+      }
+
+      var user = {
+        username: data.user.username,
+        displayName: data.user.displayName,
+        token: data.token,
+        loggedInAt: Date.now()
+      };
+
+      sessionStorage.setItem(KEY, JSON.stringify(user));
+      Auth._user = user;
+
+      return user;
     },
 
     logout: function () {
       Auth._user = null;
-      try { sessionStorage.removeItem(KEY); } catch (e) { /* ignore */ }
+      sessionStorage.removeItem(KEY);
     },
 
     currentUser: function () {
       if (Auth._user) return Auth._user;
+
       try {
         var raw = sessionStorage.getItem(KEY);
         if (raw) Auth._user = JSON.parse(raw);
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        sessionStorage.removeItem(KEY);
+      }
+
       return Auth._user || null;
     },
 
-    isLoggedIn: function () { return !!Auth.currentUser(); },
+    isLoggedIn: function () {
+      return !!Auth.currentUser();
+    },
+
     _user: null
   };
 })();
