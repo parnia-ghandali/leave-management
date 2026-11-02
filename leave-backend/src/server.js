@@ -68,16 +68,20 @@ function verifyPassword(password) {
 
 function mapRequest(r) {
   const leave = String(r['Leave Type'] || '').trim();
+const typeMap = {
+  'روزانه': 'daily',
+  'مرخصی روزانه': 'daily',
 
-  const typeMap = {
-    'روزانه': 'daily',
-    'ساعتی': 'hourly',
-    'استعلاجی': 'sick',
-    daily: 'daily',
-    hourly: 'hourly',
-    sick: 'sick'
-  };
+  'ساعتی': 'hourly',
+  'مرخصی ساعتی': 'hourly',
 
+  'استعلاجی': 'sick',
+  'مرخصی استعلاجی': 'sick',
+
+  daily: 'daily',
+  hourly: 'hourly',
+  sick: 'sick'
+};
   const status = String(r.Status || '').trim();
 
   return {
