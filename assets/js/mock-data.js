@@ -1,17 +1,17 @@
 /**
- * داده‌های آزمایشی (Mock Data)
- * تاریخ‌ها نسبت به «شروع هفته جاری (شنبه)» ساخته می‌شوند تا گزارش هفتگی
- * در هر زمانی که صفحه باز شود داده نمایشی داشته باشد.
- * نمونه داده فقط یک‌بار در LocalStorage ذخیره می‌شود.
+ * Mock Data
+ * Dates are generated relative to the beginning of the current week (Saturday)
+ * to ensure sample data is available for weekly reports whenever the page is opened.
+ * Sample data is stored in LocalStorage only once.
  */
 (function () {
   'use strict';
 
   function buildSeed() {
-    var W = Utils.weekRange(Utils.todayISO()).from; // شنبه هفته جاری
+    var W = Utils.weekRange(Utils.todayISO()).from; // Start of the current week (Saturday)
     var d = function (offset) { return Utils.addDays(W, offset); };
     var today = Utils.todayISO();
-    // تاریخ ثبت هرگز در آینده نباشد
+    // Ensure the registration date is never in the future
     var reg = function (offset) { var x = d(offset); return x > today ? today : x; };
 
     var rows = [
