@@ -1,7 +1,7 @@
 /**
- * ابزارهای کمکی: تاریخ شمسی، ارقام فارسی، escape و ...
- * تمام تاریخ‌ها در داده‌ها به صورت میلادی ISO (YYYY-MM-DD) ذخیره می‌شوند
- * و فقط هنگام نمایش به شمسی تبدیل می‌شوند.
+ * Utility functions for Jalali dates, digit conversion, escaping, and text normalization.
+ * All dates are stored in Gregorian ISO format (YYYY-MM-DD)
+ * and converted to Jalali format only when displayed.
  */
 (function () {
   'use strict';
@@ -14,7 +14,7 @@
 
   function div(a, b) { return Math.floor(a / b); }
 
-  // الگوریتم تبدیل میلادی به شمسی
+  // Gregorian-to-Jalali conversion algorithm
   function g2j(gy, gm, gd) {
     var gdm = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
     var gy2 = gm > 2 ? gy + 1 : gy;
@@ -29,7 +29,7 @@
     return [jy, jm, jd];
   }
 
-  // الگوریتم تبدیل شمسی به میلادی
+  // Jalali-to-Gregorian conversion algorithm
   function j2g(jy, jm, jd) {
     jy += 1595;
     var days = -355668 + 365 * jy + div(jy, 33) * 8 + div((jy % 33) + 3, 4) + jd +
@@ -87,27 +87,24 @@
     return utcToISO(d);
   }
 
-  /** شروع هفته (شنبه) و پایان هفته (جمعه) برای تاریخ داده‌شده */
+ /** Get the Saturday-to-Friday week range for the given date */
   function weekRange(iso) {
-    var dow = isoToUTC(iso).getUTCDay(); // 0 = یکشنبه ... 6 = شنبه
+    var dow = isoToUTC(iso).getUTCDay();     
     var back = (dow + 1) % 7;
     var start = addDays(iso, -back);
     return { from: start, to: addDays(start, 6) };
   }
 
- /** تاریخ شمسی یا میلادی را به قالب شمسی نمایش می‌دهد */
 function formatJalali(iso) {
   if (!iso) return '—';
 
   var value = toEn(String(iso)).trim();
 
-  // اگر تاریخ از قبل شمسی باشد
   if (/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value)) {
     var p = value.split('/').map(Number);
     return toFa(p[0] + '/' + pad(p[1]) + '/' + pad(p[2]));
   }
 
-  // اگر تاریخ میلادی باشد
   var p = value.split('-').map(Number);
   if (p.length !== 3 || p.some(isNaN)) return '—';
 
@@ -115,7 +112,6 @@ function formatJalali(iso) {
   return toFa(j[0] + '/' + pad(j[1]) + '/' + pad(j[2]));
 }
 
-  /** ISO -> 'یکشنبه ۱۰ آبان ۱۴۰۵' */
   function formatJalaliLong(iso) {
     var p = iso.split('-').map(Number);
     var j = g2j(p[0], p[1], p[2]);
@@ -123,7 +119,6 @@ function formatJalali(iso) {
     return wd + ' ' + toFa(j[2]) + ' ' + JALALI_MONTHS[j[1] - 1] + ' ' + toFa(j[0]);
   }
 
-  /** '1405/08/10' (فارسی یا لاتین) -> ISO یا null در صورت نامعتبر؛ رشته خالی -> '' */
   function parseJalaliInput(text) {
     var s = toEn(text || '').trim();
     if (!s) return '';
@@ -138,7 +133,6 @@ function formatJalali(iso) {
   }
 
   function isJalaliLeap(jy) {
-    // اسفند ۳۰ روزه است اگر روز ۳۰ اسفند به همان سال برگردد
     var g = j2g(jy, 12, 30);
     var back = g2j(g[0], g[1], g[2]);
     return back[0] === jy && back[1] === 12 && back[2] === 30;
@@ -150,7 +144,6 @@ function formatJalali(iso) {
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  /** نرمال‌سازی متن برای جستجو: ارقام لاتین، حروف عربی به فارسی، بدون فاصله اضافی */
   function normalizeText(value) {
     return toEn(String(value || ''))
       .replace(/ي/g, 'ی').replace(/ك/g, 'ک')
