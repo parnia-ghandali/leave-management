@@ -284,7 +284,7 @@ app.patch('/api/requests/:id/reject', auth, (req, res, next) => {
   decide(req, res, next, 'rejected');
 });
 
-// تبدیل اعداد فارسی و عربی به انگلیسی
+// Convert Persian and Arabic digits to English
 function toEnglishDigits(value) {
   return String(value || '').replace(/[۰-۹٠-٩]/g, d => {
     const digits = '۰۱۲۳۴۵۶۷۸۹';
@@ -298,7 +298,7 @@ function toEnglishDigits(value) {
   });
 }
 
-// تبدیل تاریخ شمسی به تاریخ میلادی با فرمت YYYY-MM-DD
+// Convert Jalali dates to Gregorian dates in YYYY-MM-DD format
 function jalaliToGregorianISO(value) {
   const s = toEnglishDigits(value).trim();
 
@@ -370,7 +370,7 @@ function jalaliToGregorianISO(value) {
   return `${gy}-${String(gm).padStart(2, '0')}-${String(gd).padStart(2, '0')}`;
 }
 
-// گزارش هفتگی مرخصی‌ها
+// Weekly leave report
 app.get('/api/reports/weekly', auth, async (req, res, next) => {
   try {
     const from = jalaliToGregorianISO(req.query.from || '');
@@ -403,7 +403,6 @@ app.get('/api/reports/weekly', auth, async (req, res, next) => {
 
         if (!start || !end) return false;
 
-        // نمایش مرخصی‌هایی که با بازه هفتگی هم‌پوشانی دارند
         return start <= to && end >= from;
       });
 
