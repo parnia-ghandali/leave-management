@@ -127,7 +127,7 @@ function formatJalali(iso) {
   function parseJalaliInput(text) {
     var s = toEn(text || '').trim();
     if (!s) return '';
-    var m = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/);
+   var m = s.match(/^(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})$/);
     if (!m) return null;
     var jy = +m[1], jm = +m[2], jd = +m[3];
     if (jm < 1 || jm > 12 || jd < 1) return null;
