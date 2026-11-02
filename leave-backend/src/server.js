@@ -306,7 +306,7 @@ function jalaliToGregorianISO(value) {
     return s;
   }
 
-  const m = s.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
+ const m = s.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
 
   if (!m) return '';
 
