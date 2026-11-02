@@ -1,20 +1,20 @@
 /**
- * لایه دسترسی به داده (API Layer)
+ * API Data Access Layer
  * ----------------------------------------------------------
- * تمام بخش‌های UI فقط از طریق LeaveAPI با داده کار می‌کنند.
- * با CONFIG.USE_MOCK = true داده از LocalStorage خوانده می‌شود،
- * در غیر این صورت درخواست‌ها به Backend ارسال می‌شود.
+ * All UI components interact with data through LeaveAPI.
+ * When CONFIG.USE_MOCK = true, data is loaded from LocalStorage.
+ * Otherwise, requests are sent to the Backend.
  *
- * قرارداد endpointها (پیشنهادی برای Backend):
+ * Endpoint contract (proposed for the Backend):
  *   GET   /requests?search=&type=&status=&createdFrom=&createdTo=
  *   GET   /requests/:id
  *   PATCH /requests/:id/approve
  *   PATCH /requests/:id/reject
  *   GET   /reports/weekly?from=YYYY-MM-DD&to=YYYY-MM-DD
  *
- * شکل هر درخواست:
+ * Request object structure:
  *   { id, fullName, nationalId, leaveType: 'daily'|'hourly'|'sick',
- *     startDate, endDate, startTime?, endTime?, createdAt (ISO میلادی),
+ *     startDate, endDate, startTime?, endTime?, createdAt (Gregorian ISO),
  *     reason, telegramId, status: 'pending'|'approved'|'rejected' }
  */
 (function () {
@@ -22,7 +22,6 @@
 
   var delay = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
 
-  // ---------- پیاده‌سازی نمایشی (Mock) ----------
   var mock = {
     _db: null,
     _data: function () {
@@ -78,7 +77,6 @@
     }
   };
 
-  // ---------- پیاده‌سازی واقعی (HTTP) ----------
   function http(path, options) {
     var token = (Auth.currentUser() || {}).token;
     var headers = { 'Content-Type': 'application/json' };
@@ -107,5 +105,5 @@
   };
 
   window.LeaveAPI = CONFIG.USE_MOCK ? mock : remote;
-  window.LeaveAPI._mock = mock; // برای بازنشانی داده‌های نمایشی
+  window.LeaveAPI._mock = mock;     
 })();
