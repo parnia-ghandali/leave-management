@@ -28,6 +28,7 @@
       var user = {
         username: data.user.username,
         displayName: data.user.displayName,
+        role: data.user.role,
         token: data.token,
         loggedInAt: Date.now()
       };
