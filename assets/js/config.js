@@ -6,6 +6,5 @@ window.CONFIG = {
   STORAGE_KEYS: {
     requests: 'leave_demo_requests_v1',
     session: 'leave_demo_session_v1'
-  },
-  DEMO_CREDENTIALS: { username: 'admin', password: 'admin123', displayName: 'مدیر سیستم' }
+  }
 };
