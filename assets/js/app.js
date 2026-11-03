@@ -8,7 +8,10 @@
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
   var esc = Utils.escapeHtml;
   var fa = Utils.toFa;
-
+  
+  function isDemoUser() {
+  return (Auth.currentUser() || {}).role === 'demo';
+}
   var state = {
     view: 'dashboard',
     requests: [],
@@ -87,14 +90,16 @@
     return '<div class="empty"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h6"/></svg><p>' + esc(text) + '</p></div>';
   }
 
-  function actionButtons(r) {
-    var html = '<button class="btn btn--ghost btn--sm" data-act="view" data-id="' + esc(r.id) + '">جزئیات</button>';
-    if (r.status === 'pending') {
-      html += '<button class="btn btn--success btn--sm" data-act="approve" data-id="' + esc(r.id) + '">تأیید</button>' +
-        '<button class="btn btn--danger-outline btn--sm" data-act="reject" data-id="' + esc(r.id) + '">رد</button>';
-    }
-    return '<div class="row-actions">' + html + '</div>';
+ function actionButtons(r) {
+  var html = '<button class="btn btn--ghost btn--sm" data-act="view" data-id="' + esc(r.id) + '">جزئیات</button>';
+
+  if (!isDemoUser() && r.status === 'pending') {
+    html += '<button class="btn btn--success btn--sm" data-act="approve" data-id="' + esc(r.id) + '">تأیید</button>' +
+      '<button class="btn btn--danger-outline btn--sm" data-act="reject" data-id="' + esc(r.id) + '">رد</button>';
   }
+
+  return '<div class="row-actions">' + html + '</div>';
+}
 
   /* ------------------------------------------------------------------ *
    *Data Loading
@@ -289,7 +294,7 @@
         (r.decidedAt ? detailRow('تعیین تکلیف', Utils.formatJalali(r.decidedAt) + (r.decidedBy ? ' · ' + esc(r.decidedBy) : '')) : '');
 
       var actions = [{ label: 'بستن', className: 'btn--ghost', onClick: closeModal }];
-      if (r.status === 'pending') {
+      if (!isDemoUser() && r.status === 'pending') {
         actions.unshift(
           { label: 'رد درخواست', className: 'btn--danger-outline', onClick: function () { confirmDecision(r, 'reject'); } },
           { label: 'تأیید درخواست', className: 'btn--success', onClick: function () { confirmDecision(r, 'approve'); } }
@@ -549,7 +554,14 @@
         var id = act.dataset.id;
         if (act.dataset.act === 'view') { showDetails(id); return; }
         var r = state.requests.find(function (x) { return x.id === id; });
-        if (r) confirmDecision(r, act.dataset.act);
+        if (r) {
+        if (isDemoUser() && (act.dataset.act === 'approve' || act.dataset.act === 'reject')) {
+          toast('در حالت دمو امکان تغییر وضعیت درخواست وجود ندارد.', 'error');
+            return;
+  }
+
+  confirmDecision(r, act.dataset.act);
+}
         return;
       }
 
