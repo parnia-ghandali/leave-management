@@ -48,6 +48,16 @@ function auth(req, res, next) {
   }
 }
 
+function requireAdmin(req, res, next) {
+  if (req.user?.role !== 'admin') {
+    return res.status(403).json({
+      error: 'شما اجازه انجام این عملیات را ندارید.'
+    });
+  }
+
+  next();
+}
+
 function safeEqual(a, b) {
   const x = Buffer.from(String(a));
   const y = Buffer.from(String(b));
@@ -142,7 +152,6 @@ app.get('/api/health', (_req, res) => {
     service: 'leave-management-api'
   });
 });
-
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body || {};
 
@@ -152,27 +161,58 @@ app.post('/api/auth/login', (req, res) => {
     });
   }
 
+  const loginUsername = String(username || '');
+  const loginPassword = String(password || '');
+
+  // Admin login
   if (
-    !safeEqual(username || '', process.env.ADMIN_USERNAME || 'admin') ||
-    !verifyPassword(password || '')
+    safeEqual(loginUsername, process.env.ADMIN_USERNAME || 'admin') &&
+    verifyPassword(loginPassword)
   ) {
-    return res.status(401).json({
-      error: 'نام کاربری یا رمز عبور اشتباه است.'
+    const token = jwt.sign(
+      { username: loginUsername, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
+    );
+
+    return res.json({
+      token,
+      user: {
+        username: loginUsername,
+        displayName: 'مدیر سیستم',
+        role: 'admin'
+      }
     });
   }
 
-  const token = jwt.sign(
-    { username, role: 'admin' },
-    process.env.JWT_SECRET,
-    { expiresIn: '8h' }
-  );
+  // Demo login
+  const demoUsername = process.env.DEMO_USERNAME || '';
+  const demoPassword = process.env.DEMO_PASSWORD || '';
 
-  res.json({
-    token,
-    user: {
-      username,
-      displayName: 'مدیر سیستم'
-    }
+  if (
+    demoUsername &&
+    demoPassword &&
+    safeEqual(loginUsername, demoUsername) &&
+    safeEqual(loginPassword, demoPassword)
+  ) {
+    const token = jwt.sign(
+      { username: loginUsername, role: 'demo' },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+
+    return res.json({
+      token,
+      user: {
+        username: loginUsername,
+        displayName: 'Demo User',
+        role: 'demo'
+      }
+    });
+  }
+
+  return res.status(401).json({
+    error: 'نام کاربری یا رمز عبور اشتباه است.'
   });
 });
 
@@ -276,11 +316,11 @@ async function decide(req, res, next, status) {
   }
 }
 
-app.patch('/api/requests/:id/approve', auth, (req, res, next) => {
+app.patch('/api/requests/:id/approve', auth, requireAdmin, (req, res, next) => {
   decide(req, res, next, 'approved');
 });
 
-app.patch('/api/requests/:id/reject', auth, (req, res, next) => {
+app.patch('/api/requests/:id/reject', auth, requireAdmin, (req, res, next) => {
   decide(req, res, next, 'rejected');
 });
 
@@ -306,8 +346,8 @@ function jalaliToGregorianISO(value) {
     return s;
   }
 
- const m = s.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
-
+const m = s.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
+  
   if (!m) return '';
 
   let jy = Number(m[1]);
